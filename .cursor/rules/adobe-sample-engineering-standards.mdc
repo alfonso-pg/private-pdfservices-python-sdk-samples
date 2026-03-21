@@ -1,0 +1,87 @@
+---
+description: Adobe Sample Engineering Standards for sample scripts
+globs: src/**/*.py
+alwaysApply: false
+---
+
+# Adobe Sample Engineering Standards
+
+When creating or modifying sample scripts in `src/`, follow these standards.
+
+## 1. Error Handling
+
+Every operation MUST be wrapped in a `try-except` block that explicitly catches `ServiceApiException`, `ServiceUsageException`, and `SdkException`.
+
+```python
+# ✅ GOOD
+from adobe.pdfservices.operation.exception.exceptions import (
+    ServiceApiException,
+    ServiceUsageException,
+    SdkException,
+)
+
+try:
+    # ... SDK operations ...
+except ServiceApiException as e:
+    logging.exception(f'Service API error: {e}')
+except ServiceUsageException as e:
+    logging.exception(f'Usage/quota error: {e}')
+except SdkException as e:
+    logging.exception(f'SDK/client error: {e}')
+```
+
+```python
+# ❌ BAD: bare except or missing SDK exceptions
+try:
+    pdf_services.submit(job)
+except Exception as e:  # Too broad
+    pass
+```
+
+## 2. Logging
+
+Use the standard Python `logging` module. Always initialize with `logging.basicConfig(level=logging.INFO)`.
+
+```python
+# ✅ GOOD
+import logging
+logging.basicConfig(level=logging.INFO)
+```
+
+## 3. Resource Cleanup
+
+Ensure all input streams and file handles are managed with `with` statements or explicitly closed in a `finally` block to prevent memory leaks in long-running trials.
+
+```python
+# ✅ GOOD
+with open('src/resources/input.pdf', 'rb') as file:
+    input_stream = file.read()
+# file is auto-closed
+```
+
+```python
+# ❌ BAD: manual open/close without guarantee of cleanup
+file = open('src/resources/input.pdf', 'rb')
+input_stream = file.read()
+file.close()  # Never reached if exception occurs above
+```
+
+## 4. Auth Patterns
+
+Never hardcode credentials. Always use environment variables as demonstrated in existing samples.
+
+```python
+# ✅ GOOD
+credentials = ServicePrincipalCredentials(
+    client_id=os.getenv('PDF_SERVICES_CLIENT_ID'),
+    client_secret=os.getenv('PDF_SERVICES_CLIENT_SECRET')
+)
+```
+
+```python
+# ❌ BAD: hardcoded credentials
+credentials = ServicePrincipalCredentials(
+    client_id='my-client-id',
+    client_secret='my-secret'
+)
+```

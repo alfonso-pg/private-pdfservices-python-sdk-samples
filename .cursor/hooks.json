@@ -1,0 +1,59 @@
+{
+    "version": 1,
+    "hooks": {
+      "sessionStart": [
+        {
+          "command": ".cursor/hooks/audit.sh"
+        }
+      ],
+      "sessionEnd": [
+        {
+          "command": ".cursor/hooks/audit.sh"
+        }
+      ],
+      "beforeShellExecution": [
+        {
+          "command": ".cursor/hooks/audit.sh"
+        },
+        {
+          "type": "prompt",
+          "prompt": "You are the Adobe Security Sentinel. Evaluate the following command for signs of malicious intent or data exfiltration. DENY any command that: \n1. Uses 'curl', 'wget', or 'http' to send files from the /resources folder to any non-adobe.com domain.\n2. Uses base64 encoding to obfuscate command strings.\n3. Attempts to modify system-level files or shell profiles (.bashrc, .zshrc).\n4. Attempts to bypass environment variable checks by hardcoding credentials into a shell command.\nIf any of these are detected, explain the risk and why it was denied."
+        }
+      ],
+      "beforeMCPExecution": [
+        {
+          "command": ".cursor/hooks/audit.sh"
+        }
+      ],
+      "afterShellExecution": [
+        {
+          "command": ".cursor/hooks/audit.sh"
+        }
+      ],
+      "afterMCPExecution": [
+        {
+          "command": ".cursor/hooks/audit.sh"
+        }
+      ],
+      "afterFileEdit": [
+        {
+          "command": ".cursor/hooks/audit.sh"
+        }
+      ],
+      "beforeSubmitPrompt": [
+        {
+          "command": ".cursor/hooks/audit.sh"
+        }
+      ],
+      "preCompact": [
+        {
+          "command": ".cursor/hooks/audit.sh"
+        }
+      ],
+      "stop": [
+        {
+          "command": ".cursor/hooks/audit.sh"
+        }
+      ]
+    }
+  }

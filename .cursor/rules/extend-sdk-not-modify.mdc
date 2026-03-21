@@ -1,0 +1,43 @@
+---
+description: Prefer extending SDK modules instead of modifying core logic
+alwaysApply: true
+---
+
+# Extend SDK, Don't Modify Core
+
+When integrating or customizing the Adobe PDF Services SDK (or any SDK), prefer **extending** over **modifying** core logic.
+
+## Do
+
+- **Wrap or subclass** SDK clients/operations in your own modules; keep sample-specific behavior in `src/` and call the SDK as-is.
+- **Compose** SDK calls in new scripts (e.g. new samples) rather than editing SDK source or vendored code.
+- **Configure** via SDK-supported options (timeouts, regions, credentials) instead of patching internal behavior.
+- **Add new sample modules** that use the SDK APIs; leave SDK usage patterns intact.
+
+## Don't
+
+- **Fork or patch** the SDK package or its internals to change behavior.
+- **Monkey-patch** or replace SDK classes/functions in place.
+- **Copy SDK code** into this repo and then modify it; depend on the installed package and extend in this repo only.
+
+## Example
+
+```python
+# ✅ GOOD: extend by composing SDK in a new module
+from adobe.pdfservices.operation.client_config import ClientConfig
+from adobe.pdfservices.operation.pdf_operations import CreatePDFOperation
+
+def run_create_pdf_with_my_defaults(source_path: str, output_path: str) -> None:
+    """Our wrapper; SDK types and logic stay unchanged."""
+    operation = CreatePDFOperation()
+    # ... configure and execute using public API only
+```
+
+```python
+# ❌ BAD: modifying or replacing SDK internals
+from adobe.pdfservices.operation import something
+something._internal_method = my_replacement  # monkey-patch
+# or editing files inside site-packages/adobe/...
+```
+
+When in doubt, add a new sample or helper in this repo that uses the SDK's public API rather than changing how the SDK works internally.
