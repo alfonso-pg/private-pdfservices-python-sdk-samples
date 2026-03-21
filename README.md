@@ -536,6 +536,27 @@ The sample class ```extract_text_from_pdf_exception_sample.py``` highlights how 
 python src/extractpdf/extract_text_from_pdf_exception_sample.py <input file name>
 ```
 
+### PDF Summary
+
+This sample illustrates how to extract content from a PDF using the Extract PDF operation and produce an LLM-based
+summary via OpenAI's gpt-4.1-mini model. The summary includes an inferred title, a concise overview, key topics, and
+word count, returned as a JSON file.
+
+In addition to the PDF Services credentials, set the `OPENAI_API_KEY` environment variable:
+
+```$xslt
+export OPENAI_API_KEY=<YOUR OPENAI API KEY>
+```
+
+#### Summarize a PDF File
+
+The sample class ```summarize_pdf.py``` extracts text elements from a PDF, sends the text to gpt-4.1-mini, and writes
+the resulting JSON summary (title, summary, key topics, word count) to the output folder.
+
+```$xslt
+python src/summarypdf/summarize_pdf.py
+```
+
 ### PDF Properties
 This sample illustrates how to fetch properties of a PDF file
 
@@ -608,7 +629,7 @@ python src/autotagpdf/autotag_pdf_with_options.py
 
 The sample project ```autotag_pdf_parametrised.py``` highlights how to add tags to PDF documents to make the PDF more accessible by setting options through command line arguments.
 
-Here is a sample list of command line arguments and their description: </br>
+Here is a sample list of command line arguments and description: </br>
 --input &lt; input file path &gt; </br>
 --output &lt; output file path &gt; </br>
 --report { If this argument is present then the output will be generated with the tagging report } </br>
