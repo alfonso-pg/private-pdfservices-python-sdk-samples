@@ -557,6 +557,18 @@ the resulting JSON summary (title, summary, key topics, word count) to the outpu
 python src/summarypdf/summarize_pdf.py
 ```
 
+### PII detection from PDF
+
+This sample uses the [Extract PDF](#extract-pdf) operation with text and per-character bounds (`add_char_info=True`), reads `structuredData.json` from the result zip, and runs configurable regex patterns to flag likely PII (for example email-like and phone-like strings). Matches are reported with page index and PDF user-space bounds when character bounds are present.
+
+#### Scan a PDF for regex PII matches
+
+The sample class ```scan_pii_from_pdf.py``` uses `src/resources/extractPdfInput.pdf` as input and writes a JSON report under `output/ScanPIIFromPDF/`.
+
+```$xslt
+python src/pii/scan_pii_from_pdf.py
+```
+
 ### PDF Properties
 This sample illustrates how to fetch properties of a PDF file
 
