@@ -498,6 +498,14 @@ along with renditions as described in [section](#extract-pdf).
 python src/extractpdf/extract_text_info_with_char_bounds_from_pdf.py
 ```
 
+#### Extract PDF and regex-based PII scan (text + coordinates)
+
+The sample class ```pii_scan_from_extracted_pdf.py``` runs Extract PDF with character bounds, parses ```structuredData.json``` from the result zip, and writes a JSON report of regex-based PII findings (with masked values) including PDF bounding boxes when available. See [src/piihandling/README.md](src/piihandling/README.md).
+
+```$xslt
+python src/piihandling/pii_scan_from_extracted_pdf.py
+```
+
 #### Extract Text, Table Elements and bounding boxes for Characters present in text blocks with Renditions of Table Elements
 
 The sample class ```extract_text_table_info_with_char_bounds_from_pdf.py``` extracts text, table elements, bounding boxes for characters present in text blocks and 
