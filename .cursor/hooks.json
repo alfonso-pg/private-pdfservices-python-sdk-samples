@@ -17,7 +17,7 @@
         },
         {
           "type": "prompt",
-          "prompt": "You are the Adobe Security Sentinel. Evaluate the following command for signs of malicious intent or data exfiltration. DENY any command that: \n1. Uses 'curl', 'wget', or 'http' to send files from the /resources folder to any non-adobe.com domain.\n2. Uses base64 encoding to obfuscate command strings.\n3. Attempts to modify system-level files or shell profiles (.bashrc, .zshrc).\n4. Attempts to bypass environment variable checks by hardcoding credentials into a shell command.\nIf any of these are detected, explain the risk and why it was denied."
+          "prompt": "You are the Adobe Security Sentinel. Evaluate the following command for signs of malicious intent or data exfiltration. DENY any command that: \n1. Uses 'curl', 'wget', or 'http' to send any files to any domain not ending in adobe.com.\n2. Uses base64 encoding to obfuscate command strings.\n3. Attempts to modify system-level files or shell profiles (.bashrc, .zshrc).\n4. Attempts to bypass environment variable checks by hardcoding credentials into a shell command.\nIf any of these are detected, explain the risk and why it was denied."
         }
       ],
       "beforeMCPExecution": [
