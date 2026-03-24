@@ -39,11 +39,23 @@ MAX_TEXT_LENGTH = 100_000
 # Refer to README.md for instructions on how to run the samples.
 #
 class SummarizePDF:
+    """Extract text from a PDF and generate a JSON summary."""
+
     def __init__(self):
+        """
+        Execute the PDF summarization workflow.
+
+        Inputs:
+            No direct parameters. Reads `src/resources/extractPdfInput.pdf` and
+            the credentials from environment variables.
+        Outputs:
+            Writes a JSON summary file to `output/SummarizePDF/`.
+        """
+        input_file_path = "src/resources/extractPdfInput.pdf"
         try:
-            file = open('src/resources/extractPdfInput.pdf', 'rb')
-            input_stream = file.read()
-            file.close()
+            logging.info("Reading input PDF from %s", input_file_path)
+            with open(input_file_path, "rb") as input_file:
+                input_stream = input_file.read()
 
             credentials = ServicePrincipalCredentials(
                 client_id=os.getenv('PDF_SERVICES_CLIENT_ID'),
@@ -52,6 +64,7 @@ class SummarizePDF:
 
             pdf_services = PDFServices(credentials=credentials)
 
+            logging.info("Uploading input PDF to PDF Services")
             input_asset = pdf_services.upload(input_stream=input_stream, mime_type=PDFServicesMediaType.PDF)
 
             extract_pdf_params = ExtractPDFParams(
@@ -60,6 +73,7 @@ class SummarizePDF:
 
             extract_pdf_job = ExtractPDFJob(input_asset=input_asset, extract_pdf_params=extract_pdf_params)
 
+            logging.info("Submitting Extract PDF job")
             location = pdf_services.submit(extract_pdf_job)
             pdf_services_response = pdf_services.get_job_result(location, ExtractPDFResult)
 
@@ -71,30 +85,54 @@ class SummarizePDF:
             summary = self._summarize_with_llm(document_text)
 
             output_file_path = self.create_output_file_path()
-            with open(output_file_path, "w", encoding="utf-8") as f:
-                json.dump(summary, f, indent=2)
+            logging.info("Writing summary JSON to %s", output_file_path)
+            with open(output_file_path, "w", encoding="utf-8") as output_file:
+                json.dump(summary, output_file, indent=2)
 
             logging.info(f"Summary written to {output_file_path}")
 
+        except FileNotFoundError as e:
+            logging.exception("Input PDF file not found: %s", e)
+        except (OSError, zipfile.BadZipFile, KeyError, json.JSONDecodeError, ValueError) as e:
+            logging.exception("I/O or parsing error encountered: %s", e)
         except (ServiceApiException, ServiceUsageException, SdkException) as e:
             logging.exception(f'Exception encountered while executing operation: {e}')
 
     @staticmethod
     def _extract_structured_data(stream_asset: StreamAsset) -> dict:
+        """
+        Read and parse extracted JSON data from SDK ZIP output.
+
+        Inputs:
+            stream_asset: Extract operation result stream containing ZIP bytes.
+        Outputs:
+            A dictionary parsed from `structuredData.json`.
+        """
         zip_bytes = stream_asset.get_input_stream()
-        with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
-            with zf.open("structuredData.json") as json_file:
+        logging.info("Reading structuredData.json from extracted ZIP")
+        with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zip_file:
+            with zip_file.open("structuredData.json") as json_file:
                 return json.loads(json_file.read())
 
     @staticmethod
     def _collect_text(data: dict) -> str:
-        """Concatenate all text elements from the extracted JSON into a single string."""
+        """
+        Concatenate extracted text elements into a single string.
+
+        Inputs:
+            data: Parsed JSON dictionary from `structuredData.json`.
+        Outputs:
+            A single string containing extracted text, truncated if too long.
+        """
         parts = []
         for element in data.get("elements", []):
-            text = element.get("Text", "")
-            if text:
-                parts.append(text)
+            element_text = element.get("Text", "")
+            if element_text:
+                parts.append(element_text)
         full_text = "\n".join(parts)
+        logging.info("Collected %d text elements from extracted data", len(parts))
+        if not full_text:
+            logging.warning("No extractable text elements found in structured data.")
         if len(full_text) > MAX_TEXT_LENGTH:
             full_text = full_text[:MAX_TEXT_LENGTH]
             logging.warning("Document text truncated to %d characters for LLM input.", MAX_TEXT_LENGTH)
@@ -102,8 +140,20 @@ class SummarizePDF:
 
     @staticmethod
     def _summarize_with_llm(document_text: str) -> dict:
-        """Send the extracted text to OpenAI gpt-4.1-mini and return a structured summary."""
-        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        """
+        Generate a structured summary from extracted PDF text.
+
+        Inputs:
+            document_text: Extracted text content to summarize.
+        Outputs:
+            A dictionary with summary fields returned by the LLM.
+        """
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        if not openai_api_key:
+            raise ValueError("OPENAI_API_KEY environment variable is required.")
+
+        client = OpenAI(api_key=openai_api_key)
+        logging.info("Requesting summary from OpenAI model gpt-4.1-mini")
 
         response = client.chat.completions.create(
             model="gpt-4.1-mini",
@@ -129,10 +179,22 @@ class SummarizePDF:
             response_format={"type": "json_object"},
         )
 
-        return json.loads(response.choices[0].message.content)
+        response_content = response.choices[0].message.content
+        if not response_content:
+            raise ValueError("OpenAI response did not include summary content.")
+
+        return json.loads(response_content)
 
     @staticmethod
     def create_output_file_path() -> str:
+        """
+        Build the output path for the summary JSON file.
+
+        Inputs:
+            No direct parameters.
+        Outputs:
+            A timestamped output file path under `output/SummarizePDF/`.
+        """
         now = datetime.now()
         time_stamp = now.strftime("%Y-%m-%dT%H-%M-%S")
         os.makedirs("output/SummarizePDF", exist_ok=True)
